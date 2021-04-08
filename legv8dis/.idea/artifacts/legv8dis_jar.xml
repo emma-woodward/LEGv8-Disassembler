@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="legv8dis:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/legv8dis_jar</output-path>
+    <root id="archive" name="legv8dis.jar">
+      <element id="module-output" name="legv8dis" />
+    </root>
+  </artifact>
+</component>

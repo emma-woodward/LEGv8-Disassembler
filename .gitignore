@@ -1,0 +1,10 @@
+# File Extensions
+*.txt
+*.legv8emul
+*.machine
+*.jar
+*.class
+
+# Folders
+/.idea*
+/out*
