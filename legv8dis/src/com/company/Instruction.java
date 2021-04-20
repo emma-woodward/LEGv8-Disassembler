@@ -2,16 +2,16 @@ package com.company;
 
 public class Instruction {
 
-    private String instructionName;
-    private int opcode;
+    private String instructionStr;
+    private String opcode;
 
-    public Instruction(String instructionName, int opcode) {
-        this.instructionName = instructionName;
+    public Instruction(String instructionStr, String opcode) {
+        this.instructionStr = instructionStr;
         this.opcode = opcode;
     }
 
-    public String getInstructionName(){
-        return instructionName;
+    public String getInstructionString(){
+        return instructionStr;
     }
 
     public boolean opcodeMatch(int op){

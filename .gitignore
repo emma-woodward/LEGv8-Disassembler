@@ -1,10 +1,13 @@
 # File Extensions
 *.txt
-*.legv8emul
+*.legv8asm
 *.machine
 *.jar
 *.class
 
 # Folders
-/.idea*
-/out*
+/legv8dis/.idea*
+/legv8dis/out*
+
+# Files
+/legv8dis/legv8dis.iml
