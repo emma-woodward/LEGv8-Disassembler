@@ -92,13 +92,22 @@ public class Main {
 
             for(int i = 0; i < instructions.size(); i++){
                 String str = instructions.get(i);
-                String opcode = str.substring(0, 12);
+                String opcode = str.substring(0, 11);
 
-                for(Instruction s : instructionSet){
-                    if(s.opcodeMatch(opcode)){
+                //Figure out which instruction the opcode belongs to
+                int index = -1;
 
+                for(int k = 0; k < instructionSet.length; k++){
+                    if(instructionSet[k].opcodeMatch(opcode)){
+                        index = k;
+                        k = instructionSet.length + 5;
                     }
                 }
+
+                //Need to figure out which bits are apart of which parts of the instruction type
+
+
+
             }
 
 
