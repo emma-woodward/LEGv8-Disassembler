@@ -12,6 +12,8 @@ public class Instruction {
         this.instructionType = instructionType;
     }
 
+    public String getInstructionType(){ return instructionType; }
+
     public boolean doesOpcodeMatch(String op) {
         return op.compareTo(opcode) == 0;
     }
@@ -67,37 +69,84 @@ public class Instruction {
         return brokenDown;
     }
 
-
-    public String constructString(String[] args) {
-        String returnStr = null;
-
-        switch (instructionType) {
-            case "R":
-                returnStr = instructionStr + " " + args[0] + ", " + args[1] + ", " + args[2];
-                break;
-            case "I":
-                returnStr = instructionStr + " " + args[0] + ", " + args[1] + ", " + args[2];
-                break;
-            case "D":
-                returnStr = instructionStr + " " + args[0] + ",[" + args[1] + ", " + args[2] + "]";
-                break;
-            case "B":
-                returnStr = instructionStr + "LABEL";
-                break;
-            case "CB":
-                returnStr = instructionStr + "LABEL";
-                break;
-            case "IW":
-                returnStr = instructionStr + "YEAHHHH BOIIIIIIIIIIIIIIIIII";
-                break;
-            case "Z":
-                returnStr = instructionStr;
-                break;
-            default:
-                break;
-        }
-
-        return returnStr;
+    /*Special Registers:
+    XZR: Register X31
+    LR: Register X30
+    FP: Register X29
+    SP: Register X28
+    * */
+    private String getRegisterName(int register){
+        return switch (register) {
+            case 31 -> "XZR";
+            case 30 -> "LR";
+            case 29 -> "FP";
+            case 28 -> "SP";
+            default -> "X" + register;
+        };
     }
 
+    private String constructRString(String[] args){
+        //Opcode, Rm, Shamt, Rn, Rd
+        //Rd = Rn + Rm
+        String Rn = getRegisterName(Integer.parseInt(args[3], 2));
+        String Rm = getRegisterName(Integer.parseInt(args[1], 2));
+        String Rd = getRegisterName(Integer.parseInt(args[4], 2));
+        int Shamt = Integer.parseInt(args[2], 2);
+
+        //These are the only instructions that use the shift amount
+        if(instructionStr.equals("LSL") || instructionStr.equals("LSR")){
+            return (instructionStr + " " + Rd + ", " + Rn + ", #" + Shamt);
+        }
+
+        return (instructionStr + " " + Rd + ", " + Rn + ", " + Rm);
+    }
+
+    private String constructIString(String[] args){
+        int immediate = Integer.parseInt(args[1], 2);
+        String Rn = getRegisterName(Integer.parseInt(args[2], 2));
+        String Rd = getRegisterName(Integer.parseInt(args[3], 2));
+
+        return (instructionStr + " " + Rd + ", " + Rn + ", #" + immediate);
+    }
+
+    private String constructDString(String[] args){
+        //Rt = Rn + DT_add
+        //Opcode, DT_add, op, Rn, Rt
+        String Rn = getRegisterName(Integer.parseInt(args[3], 2));
+        String Rt = getRegisterName(Integer.parseInt(args[4], 2));
+        int immediate = Integer.parseInt(args[1], 2);
+
+        return (instructionStr + " " + Rt + ", [" + Rn + ", #" + immediate + "]");
+    }
+
+    private String constructBString(String[] args){
+        int address = Integer.parseInt(args[1], 2);
+
+        return (instructionStr + " " + address);
+    }
+
+    private String constructCBString(String[] args){
+        //Opcode, address, Rt
+        String Rt = getRegisterName(Integer.parseInt(args[2], 2));
+        int address = Integer.parseInt(args[1], 2);
+
+        return (instructionStr + " " + Rt + ", " + address);
+    }
+
+    public String constructString(String[] args) {
+        switch (instructionType) {
+            case "R":
+                return constructRString(args);
+            case "I":
+                return constructIString(args);
+            case "D":
+                return constructDString(args);
+            case "B":
+                return constructBString(args);
+            case "CB":
+                return constructCBString(args);
+            default:
+                return null;
+        }
+    }
 }

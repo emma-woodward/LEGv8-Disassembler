@@ -3,6 +3,7 @@ package com.company;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Main {
 
@@ -20,7 +21,7 @@ public class Main {
                 new Instruction("B", "000101", "B"),
                 new Instruction("BR", "100101", "R"), //TODO: BR instruction here doesn't 100% look like the one on the sheet
                 new Instruction("CBNZ", "10110101", "CB"),
-                new Instruction("CBZ", "10110100", "CB"), //TODO:
+                new Instruction("CBZ", "10110100", "CB"),
                 new Instruction("DUMP", "11111111110", "R"),
                 new Instruction("EOR", "11001010000", "R"),
                 new Instruction("EORI", "1101001000", "I"),
@@ -75,6 +76,8 @@ public class Main {
             //TODO: Change this to args[0] when handing in the project
             FileInputStream fs = new FileInputStream(new File(DEV_FILEPATH));
             ArrayList<String> instructions = new ArrayList<String>();
+            ArrayList<String> ARMInstructions = new ArrayList<String>();
+            ArrayList<Integer> branchingInstructions = new ArrayList<Integer>();
 
             //Reading in bytes and converting them into a binary string
             //that will be used to interpret each instruction then
@@ -97,10 +100,10 @@ public class Main {
 
             fs.close();
 
-            for (String currentInstruction : instructions) {
-                //Figure out which instruction the opcode belongs to
+            for (int p = 0; p < instructions.size(); p++) {
+                String currentInstruction = instructions.get(p);
 
-                System.out.println(currentInstruction);
+                //Figure out which instruction the opcode belongs to
 
                 //Make sure the instruction is 32 bits wide
                 //This is to counter act Integer.toBinaryString() by adding back the leading zeros that it takes out
@@ -113,8 +116,6 @@ public class Main {
 
                     currentInstruction = temp + currentInstruction;
                 }
-
-                System.out.println(currentInstruction + "\n");
 
                 //Opcodes can be 6, 8, 9, 10, 11 bits wide
                 String o1 = currentInstruction.substring(0, 11);
@@ -142,16 +143,52 @@ public class Main {
                 //that breaks down the instruction in the Instruction class
                 String[] brokenDownInstruction = instructionSet[matchedIndex].breakInstruction(currentInstruction);
 
-                System.out.println(instructionSet[matchedIndex].getInstructionName());
+                String curInstructionType = instructionSet[matchedIndex].getInstructionType();
 
-                for(String s : brokenDownInstruction){
-                    if(s != null){
-                        System.out.println(s);
-                    }
+                if(curInstructionType == "B" || curInstructionType == "CB"){
+                    branchingInstructions.add(p);
                 }
 
-                System.out.println("");
+                ARMInstructions.add(instructionSet[matchedIndex].constructString(brokenDownInstruction));
+            }
 
+            //At this point we know all of the instructions, we just need to do the labels properly.
+            //Go through each instruction in the list of instructions that use labels
+
+            for(int callerIndex : branchingInstructions){
+                //Figure out where the label needs to be, check
+                //if there's already one created at that index, if not create one
+
+                //Parse offset
+                String currentInstruction = ARMInstructions.get(callerIndex);
+                Scanner scan = new Scanner(currentInstruction);
+                int numOfLabels = 0;
+                String tempStr = "";
+
+                while(scan.hasNext()){
+                    tempStr = scan.next();
+                }
+
+                int offset = Integer.parseInt(tempStr);
+
+                //Have offset now, find index of where label should be and check if there's a label there already
+                int labelIndex = callerIndex + offset;
+                String labelName;
+
+                if(!ARMInstructions.get(labelIndex).contains("label")){
+                    labelName = "label_" + ++numOfLabels;
+                    ARMInstructions.add(labelIndex, labelName);
+                }
+                else{
+                    labelName = ARMInstructions.get(labelIndex);
+                }
+
+                //Add label name to current instruction
+                ARMInstructions.set(callerIndex, currentInstruction.replace(Integer.toString(offset), labelName));
+            }
+
+            for(String str : ARMInstructions){
+                System.out.println(str);
             }
         }
         catch(NoSuchMethodException nsme){

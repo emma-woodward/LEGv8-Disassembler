@@ -1,21 +1,8 @@
-//I Type
-//ADDI X0, XZR, #0
-
-//R Type
-//ADD X3, X1, X4
-
-//D Type
-//LDUR X27, [X8, #2]
-
-//B Type
-//B fuck 
-
-//CB Type
-//CBZ X0, fuck
-
-//CB.cond instructions
-
-
-//fuck:
-	//ADDI X0, XZR, #0
-	
+B someLabel
+ADDI X0, XZR, #0
+ADD X3, X1, X4
+CBZ X3, someLabel
+someLabel:
+	LDUR X27, [X8, #2]
+	SUBI X0, X5, #27
+	LSL X11, X7, #3 
