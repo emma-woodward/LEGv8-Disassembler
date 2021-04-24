@@ -9,7 +9,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-         Instruction[] instructionSet = {
+        Instruction[] instructionSet = {
                 new Instruction("ADD", "10001011000", "R"),
                 new Instruction("ADDI", "1001000100", "I"),
                 new Instruction("ADDIS", "1011000100", "I"),
@@ -19,7 +19,7 @@ public class Main {
                 new Instruction("ANDIS", "1111001000", "I"),
                 new Instruction("ANDS", "1110101000", "R"),
                 new Instruction("B", "000101", "B"),
-                new Instruction("BR", "100101", "R"), //TODO: BR instruction here doesn't 100% look like the one on the sheet
+                new Instruction("BR", "11010110000", "R"), //TODO: BR instruction here doesn't 100% look like the one on the sheet
                 new Instruction("CBNZ", "10110101", "CB"),
                 new Instruction("CBZ", "10110100", "CB"),
                 new Instruction("DUMP", "11111111110", "R"),
@@ -62,17 +62,19 @@ public class Main {
                 new Instruction("SUBIS", "1111000100", "I"),
                 new Instruction("SUBS", "11101011000", "R"),
                 new Instruction("UDIV", "10011010110", "R"),
-                new Instruction("UMULH", "10011011110", "R")
+                new Instruction("UMULH", "10011011110", "R"),
+                new Instruction("B.", "01010100", "CB"),
+                new Instruction("BL", "100101", "B")
         };
 
         String DEV_FILEPATH = "C:/Users/Woodward/Documents/LEGv8-Disassembler/test.legv8asm.machine";
         boolean developerMode = true;
 
-        if(args.length == 0 && !developerMode){
+        if (args.length == 0 && !developerMode) {
             System.out.println("Hello I am a disassembler, please give me a file to disassemble :)");
         }
 
-        try{
+        try {
             //TODO: Change this to args[0] when handing in the project
             FileInputStream fs = new FileInputStream(new File(DEV_FILEPATH));
             ArrayList<String> instructions = new ArrayList<String>();
@@ -82,7 +84,7 @@ public class Main {
             //Reading in bytes and converting them into a binary string
             //that will be used to interpret each instruction then
             //stores those binary strings in a String[]
-            while(fs.available() > 0){
+            while (fs.available() > 0) {
                 byte[] bArr = fs.readNBytes(4);
                 int theInstructionInt = Byte.toUnsignedInt(bArr[0]);
 
@@ -107,14 +109,8 @@ public class Main {
 
                 //Make sure the instruction is 32 bits wide
                 //This is to counter act Integer.toBinaryString() by adding back the leading zeros that it takes out
-                if(currentInstruction.length() < 32){
-                    String temp = "";
-
-                    for(int i = 0; i < (32-currentInstruction.length()); i++){
-                        temp += "0";
-                    }
-
-                    currentInstruction = temp + currentInstruction;
+                while (currentInstruction.length() < 32) {
+                    currentInstruction = "0" + currentInstruction;
                 }
 
                 //Opcodes can be 6, 8, 9, 10, 11 bits wide
@@ -127,15 +123,16 @@ public class Main {
                 int matchedIndex = -1;
 
                 //Check for all combinations of possible bit widths
-                for(int i = 0; i < instructionSet.length; i++){
-                    if(instructionSet[i].doesOpcodeMatch(o1) || instructionSet[i].doesOpcodeMatch(o2) || instructionSet[i].doesOpcodeMatch(o3) ||
-                       instructionSet[i].doesOpcodeMatch(o4) || instructionSet[i].doesOpcodeMatch(o5)){
+                for (int i = 0; i < instructionSet.length; i++) {
+                    if (instructionSet[i].doesOpcodeMatch(o1) || instructionSet[i].doesOpcodeMatch(o2) || instructionSet[i].doesOpcodeMatch(o3) ||
+                            instructionSet[i].doesOpcodeMatch(o4) || instructionSet[i].doesOpcodeMatch(o5)) {
                         matchedIndex = i;
                     }
                 }
 
                 //Something went wrong
-                if(matchedIndex == -1){
+                if (matchedIndex == -1) {
+                    System.out.println(currentInstruction);
                     throw new NoSuchMethodException();
                 }
 
@@ -145,7 +142,7 @@ public class Main {
 
                 String curInstructionType = instructionSet[matchedIndex].getInstructionType();
 
-                if(curInstructionType == "B" || curInstructionType == "CB"){
+                if (curInstructionType == "B" || curInstructionType == "CB") {
                     branchingInstructions.add(p);
                 }
 
@@ -155,17 +152,20 @@ public class Main {
             //At this point we know all of the instructions, we just need to do the labels properly.
             //Go through each instruction in the list of instructions that use labels
 
-            for(int callerIndex : branchingInstructions){
+            int numOfLabels = 0;
+
+            ArrayList<Integer> labelIndices = new ArrayList<Integer>();
+
+            for (int callerIndex : branchingInstructions) {
                 //Figure out where the label needs to be, check
                 //if there's already one created at that index, if not create one
 
                 //Parse offset
                 String currentInstruction = ARMInstructions.get(callerIndex);
                 Scanner scan = new Scanner(currentInstruction);
-                int numOfLabels = 0;
                 String tempStr = "";
 
-                while(scan.hasNext()){
+                while (scan.hasNext()) {
                     tempStr = scan.next();
                 }
 
@@ -175,11 +175,10 @@ public class Main {
                 int labelIndex = callerIndex + offset;
                 String labelName;
 
-                if(!ARMInstructions.get(labelIndex).contains("label")){
+                if (!ARMInstructions.get(labelIndex).contains("label")) {
                     labelName = "label_" + ++numOfLabels;
-                    ARMInstructions.add(labelIndex, labelName);
-                }
-                else{
+                    ARMInstructions.add(labelIndex + numOfLabels - 1, labelName + ":");
+                } else {
                     labelName = ARMInstructions.get(labelIndex);
                 }
 
@@ -187,14 +186,12 @@ public class Main {
                 ARMInstructions.set(callerIndex, currentInstruction.replace(Integer.toString(offset), labelName));
             }
 
-            for(String str : ARMInstructions){
+            for (String str : ARMInstructions) {
                 System.out.println(str);
             }
-        }
-        catch(NoSuchMethodException nsme){
+        } catch (NoSuchMethodException nsme) {
             System.out.println("One or more instructions are invalid...");
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }

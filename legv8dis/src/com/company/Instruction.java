@@ -93,6 +93,18 @@ public class Instruction {
         String Rd = getRegisterName(Integer.parseInt(args[4], 2));
         int Shamt = Integer.parseInt(args[2], 2);
 
+        if(instructionStr.equals("BR")){
+            return (instructionStr + " " + Rn);
+        }
+
+        if(instructionStr.equals("PRNT")){
+            return (instructionStr + " " + Rd);
+        }
+
+        if(instructionStr.equals("PRNL") || instructionStr.equals("DUMP") || instructionStr.equals("HALT")){
+            return instructionStr;
+        }
+
         //These are the only instructions that use the shift amount
         if(instructionStr.equals("LSL") || instructionStr.equals("LSR")){
             return (instructionStr + " " + Rd + ", " + Rn + ", #" + Shamt);
@@ -125,8 +137,50 @@ public class Instruction {
         return (instructionStr + " " + address);
     }
 
+    private String getBCond(int cond){
+        switch(cond){
+            case 0:
+                return "B.EQ";
+            case 1:
+                return "B.NE";
+            case 2:
+                return "B.HS";
+            case 3:
+                return "B.LO";
+            case 4:
+                return "B.MI";
+            case 5:
+                return "B.PL";
+            case 6:
+                return "B.VS";
+            case 7:
+                return "B.VC";
+            case 8:
+                return "B.HI";
+            case 9:
+                return "B.LS";
+            case 10:
+                return "B.GE";
+            case 11:
+                return "B.LT";
+            case 12:
+                return "B.GT";
+            case 13:
+                return "B.LE";
+            default:
+                return null;
+        }
+    }
+
     private String constructCBString(String[] args){
         //Opcode, address, Rt
+        if(instructionStr.equals("B.")){
+            String newInstructionName = getBCond(Integer.parseInt(args[2], 2));
+            int address = Integer.parseInt(args[1], 2);
+
+            return (newInstructionName + " " + address);
+        }
+
         String Rt = getRegisterName(Integer.parseInt(args[2], 2));
         int address = Integer.parseInt(args[1], 2);
 
