@@ -131,8 +131,35 @@ public class Instruction {
         return (instructionStr + " " + Rt + ", [" + Rn + ", #" + immediate + "]");
     }
 
-    private String constructBString(String[] args){
+    private String constructBString(String[] args, boolean isUnreasonbale){
         int address = Integer.parseInt(args[1], 2);
+
+        if(isUnreasonbale){
+            address--;
+            String temp = Integer.toBinaryString(address);
+
+            if(temp.length() > 23){
+                //Shorten the string
+                temp = temp.substring(temp.length() - 24);
+
+            }
+
+            //Invert it
+
+            char[] arr = temp.toCharArray();
+            temp = "";
+
+            for(int i = 0; i < arr.length; i++) {
+                if (arr[i] == '0') {
+                    temp += "1";
+                } else {
+                    temp += "0";
+                }
+            }
+
+            address = Integer.parseInt(temp, 2);
+            address = -address;
+        }
 
         return (instructionStr + " " + address);
     }
@@ -172,11 +199,22 @@ public class Instruction {
         }
     }
 
-    private String constructCBString(String[] args){
+    private String constructCBString(String[] args, boolean isUnreasonbale){
         //Opcode, address, Rt
         if(instructionStr.equals("B.")){
             String newInstructionName = getBCond(Integer.parseInt(args[2], 2));
             int address = Integer.parseInt(args[1], 2);
+
+            if(isUnreasonbale){
+                address--;
+                String temp = Integer.toBinaryString(address);
+
+                if(temp.length() > 23){
+                    //Shorten the string
+                    temp = temp.substring(temp.length() - 24);
+                    address = Integer.parseInt(temp);
+                }
+            }
 
             return (newInstructionName + " " + address);
         }
@@ -187,7 +225,7 @@ public class Instruction {
         return (instructionStr + " " + Rt + ", " + address);
     }
 
-    public String constructString(String[] args) {
+    public String constructString(String[] args, boolean isUnreasonable) {
         switch (instructionType) {
             case "R":
                 return constructRString(args);
@@ -196,9 +234,9 @@ public class Instruction {
             case "D":
                 return constructDString(args);
             case "B":
-                return constructBString(args);
+                return constructBString(args, isUnreasonable);
             case "CB":
-                return constructCBString(args);
+                return constructCBString(args, isUnreasonable);
             default:
                 return null;
         }

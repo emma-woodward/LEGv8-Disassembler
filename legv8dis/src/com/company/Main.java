@@ -67,7 +67,7 @@ public class Main {
                 new Instruction("BL", "100101", "B")
         };
 
-        String DEV_FILEPATH = "C:/Users/Woodward/Documents/LEGv8-Disassembler/test.legv8asm.machine";
+        String DEV_FILEPATH = "C:/Users/Woodward/Documents/LEGv8-Disassembler/ss.legv8asm.machine";
         boolean developerMode = true;
 
         if (args.length == 0 && !developerMode) {
@@ -146,44 +146,89 @@ public class Main {
                     branchingInstructions.add(p);
                 }
 
-                ARMInstructions.add(instructionSet[matchedIndex].constructString(brokenDownInstruction));
+                ARMInstructions.add(instructionSet[matchedIndex].constructString(brokenDownInstruction, false));
             }
 
             //At this point we know all of the instructions, we just need to do the labels properly.
             //Go through each instruction in the list of instructions that use labels
+            ArrayList<Label> labels = new ArrayList<Label>();
 
-            int numOfLabels = 0;
-
-            ArrayList<Integer> labelIndices = new ArrayList<Integer>();
-
-            for (int callerIndex : branchingInstructions) {
-                //Figure out where the label needs to be, check
-                //if there's already one created at that index, if not create one
-
-                //Parse offset
+            for(int callerIndex : branchingInstructions){
                 String currentInstruction = ARMInstructions.get(callerIndex);
                 Scanner scan = new Scanner(currentInstruction);
-                String tempStr = "";
+                String n = scan.next();
+                String temp = null;
 
-                while (scan.hasNext()) {
-                    tempStr = scan.next();
+                while(scan.hasNext()){
+                    temp = scan.next();
                 }
 
-                int offset = Integer.parseInt(tempStr);
-
-                //Have offset now, find index of where label should be and check if there's a label there already
+                int offset = Integer.parseInt(temp);
                 int labelIndex = callerIndex + offset;
-                String labelName;
 
-                if (!ARMInstructions.get(labelIndex).contains("label")) {
-                    labelName = "label_" + ++numOfLabels;
-                    ARMInstructions.add(labelIndex + numOfLabels - 1, labelName + ":");
-                } else {
-                    labelName = ARMInstructions.get(labelIndex);
+                //Check if label index is reasonable, if not take the original binary: subtract 1, and invert
+                if(labelIndex > instructions.size()){
+                    Instruction theInstruction = null;
+
+                    for(Instruction m : instructionSet){
+                        if(m.getInstructionName().equals(n)){
+                            theInstruction = m;
+                            break;
+                        }
+                    }
+
+                    if(theInstruction == null){
+                        throw new Exception();
+                    }
+
+                    String[] currentInstructionArgs = theInstruction.breakInstruction(instructions.get(callerIndex));
+                    String newInstruction = theInstruction.constructString(currentInstructionArgs, true);
+                    ARMInstructions.set(callerIndex, newInstruction);
+                    currentInstruction = newInstruction;
+
+                    scan = new Scanner(currentInstruction);
+                    temp = "";
+
+                    while (scan.hasNext()) {
+                        temp = scan.next();
+                    }
+
+                    offset = Integer.parseInt(temp);
+
+                    //Have offset now, find index of where label should be and check if there's a label there already
+                    labelIndex = callerIndex + offset;
+
                 }
 
-                //Add label name to current instruction
-                ARMInstructions.set(callerIndex, currentInstruction.replace(Integer.toString(offset), labelName));
+                String labelName = "label_" + labels.size();
+                labels.add(new Label(labelName, labelIndex));
+
+                ARMInstructions.set(callerIndex, n + " " + labelName);
+            }
+
+        //Sort labels so that it's from largest to smallest so that it doesn't disrupt indexing of the labels
+        for(int i = 0; i < labels.size() - 1; i++){
+            int greatestLabelIndex = i;
+
+            for(int j = i + 1; j < labels.size(); j++){
+                Label l2 = labels.get(j);
+
+                if(labels.get(greatestLabelIndex).getIndex() < l2.getIndex()){
+                    greatestLabelIndex = j;
+                }
+            }
+
+            //Swap
+            if(greatestLabelIndex != -1){
+                Label l1 = labels.get(i);
+                labels.set(i, labels.get(greatestLabelIndex));
+                labels.set(greatestLabelIndex, l1);
+            }
+        }
+
+        //Insert labels
+            for(Label l : labels){
+                ARMInstructions.add(l.getIndex(), l.getName() + ":");
             }
 
             for (String str : ARMInstructions) {

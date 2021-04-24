@@ -4,9 +4,11 @@ test:
 PRNT X7
 PRNL
 LDUR X27, [X8, #2]
-B test
+B test //-3
+B another
 ADDI X0, XZR, #0
 ADD X3, X1, X4
+another:
 DUMP
 //negative branching needs to be worked on
-//101111 11111111111111111111101
+//101111 1 1111111111111111111101
