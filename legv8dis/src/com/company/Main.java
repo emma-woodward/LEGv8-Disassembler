@@ -2,6 +2,7 @@ package com.company;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -67,177 +68,181 @@ public class Main {
                 new Instruction("BL", "100101", "B")
         };
 
-        String DEV_FILEPATH = "C:/Users/Woodward/Documents/LEGv8-Disassembler/ss.legv8asm.machine";
-        boolean developerMode = true;
-
-        if (args.length == 0 && !developerMode) {
+        if (args.length == 0) {
             System.out.println("Hello I am a disassembler, please give me a file to disassemble :)");
-        }
+        } else {
 
-        try {
-            //TODO: Change this to args[0] when handing in the project
-            FileInputStream fs = new FileInputStream(new File(DEV_FILEPATH));
-            ArrayList<String> instructions = new ArrayList<String>();
-            ArrayList<String> ARMInstructions = new ArrayList<String>();
-            ArrayList<Integer> branchingInstructions = new ArrayList<Integer>();
+            try {
+                FileInputStream fs = new FileInputStream(new File(args[0]));
+                ArrayList<String> instructions = new ArrayList<String>();
+                ArrayList<String> ARMInstructions = new ArrayList<String>();
+                ArrayList<Integer> branchingInstructions = new ArrayList<Integer>();
 
-            //Reading in bytes and converting them into a binary string
-            //that will be used to interpret each instruction then
-            //stores those binary strings in a String[]
-            while (fs.available() > 0) {
-                byte[] bArr = fs.readNBytes(4);
-                int theInstructionInt = Byte.toUnsignedInt(bArr[0]);
+                //Reading in bytes and converting them into a binary string
+                //that will be used to interpret each instruction then
+                //stores those binary strings in a String[]
+                while (fs.available() > 0) {
+                    byte[] bArr = fs.readNBytes(4);
+                    int theInstructionInt = Byte.toUnsignedInt(bArr[0]);
 
-                theInstructionInt = theInstructionInt << 8;
-                theInstructionInt += Byte.toUnsignedInt(bArr[1]);
+                    theInstructionInt = theInstructionInt << 8;
+                    theInstructionInt += Byte.toUnsignedInt(bArr[1]);
 
-                theInstructionInt = theInstructionInt << 8;
-                theInstructionInt += Byte.toUnsignedInt(bArr[2]);
+                    theInstructionInt = theInstructionInt << 8;
+                    theInstructionInt += Byte.toUnsignedInt(bArr[2]);
 
-                theInstructionInt = theInstructionInt << 8;
-                theInstructionInt += Byte.toUnsignedInt(bArr[3]);
+                    theInstructionInt = theInstructionInt << 8;
+                    theInstructionInt += Byte.toUnsignedInt(bArr[3]);
 
-                instructions.add(Integer.toBinaryString(theInstructionInt));
-            }
-
-            fs.close();
-
-            for (int p = 0; p < instructions.size(); p++) {
-                String currentInstruction = instructions.get(p);
-
-                //Figure out which instruction the opcode belongs to
-
-                //Make sure the instruction is 32 bits wide
-                //This is to counter act Integer.toBinaryString() by adding back the leading zeros that it takes out
-                while (currentInstruction.length() < 32) {
-                    currentInstruction = "0" + currentInstruction;
+                    instructions.add(Integer.toBinaryString(theInstructionInt));
                 }
 
-                //Opcodes can be 6, 8, 9, 10, 11 bits wide
-                String o1 = currentInstruction.substring(0, 11);
-                String o2 = currentInstruction.substring(0, 10);
-                String o3 = currentInstruction.substring(0, 9);
-                String o4 = currentInstruction.substring(0, 8);
-                String o5 = currentInstruction.substring(0, 6);
+                fs.close();
 
-                int matchedIndex = -1;
+                for (int p = 0; p < instructions.size(); p++) {
+                    String currentInstruction = instructions.get(p);
 
-                //Check for all combinations of possible bit widths
-                for (int i = 0; i < instructionSet.length; i++) {
-                    if (instructionSet[i].doesOpcodeMatch(o1) || instructionSet[i].doesOpcodeMatch(o2) || instructionSet[i].doesOpcodeMatch(o3) ||
-                            instructionSet[i].doesOpcodeMatch(o4) || instructionSet[i].doesOpcodeMatch(o5)) {
-                        matchedIndex = i;
+                    //Figure out which instruction the opcode belongs to
+
+                    //Make sure the instruction is 32 bits wide
+                    //This is to counter act Integer.toBinaryString() by adding back the leading zeros that it takes out
+                    while (currentInstruction.length() < 32) {
+                        currentInstruction = "0" + currentInstruction;
                     }
-                }
 
-                //Something went wrong
-                if (matchedIndex == -1) {
-                    System.out.println(currentInstruction);
-                    throw new NoSuchMethodException();
-                }
+                    //Opcodes can be 6, 8, 9, 10, 11 bits wide
+                    String o1 = currentInstruction.substring(0, 11);
+                    String o2 = currentInstruction.substring(0, 10);
+                    String o3 = currentInstruction.substring(0, 9);
+                    String o4 = currentInstruction.substring(0, 8);
+                    String o5 = currentInstruction.substring(0, 6);
 
-                //At this point we know which instruction is being executed so we can call the method
-                //that breaks down the instruction in the Instruction class
-                String[] brokenDownInstruction = instructionSet[matchedIndex].breakInstruction(currentInstruction);
+                    int matchedIndex = -1;
 
-                String curInstructionType = instructionSet[matchedIndex].getInstructionType();
-
-                if (curInstructionType == "B" || curInstructionType == "CB") {
-                    branchingInstructions.add(p);
-                }
-
-                ARMInstructions.add(instructionSet[matchedIndex].constructString(brokenDownInstruction, false));
-            }
-
-            //At this point we know all of the instructions, we just need to do the labels properly.
-            //Go through each instruction in the list of instructions that use labels
-            ArrayList<Label> labels = new ArrayList<Label>();
-
-            for(int callerIndex : branchingInstructions){
-                String currentInstruction = ARMInstructions.get(callerIndex);
-                Scanner scan = new Scanner(currentInstruction);
-                String n = scan.next();
-                String temp = null;
-
-                while(scan.hasNext()){
-                    temp = scan.next();
-                }
-
-                int offset = Integer.parseInt(temp);
-                int labelIndex = callerIndex + offset;
-
-                //Check if label index is reasonable, if not take the original binary: subtract 1, and invert
-                if(labelIndex > instructions.size()){
-                    Instruction theInstruction = null;
-
-                    for(Instruction m : instructionSet){
-                        if(m.getInstructionName().equals(n)){
-                            theInstruction = m;
-                            break;
+                    //Check for all combinations of possible bit widths
+                    for (int i = 0; i < instructionSet.length; i++) {
+                        if (instructionSet[i].doesOpcodeMatch(o1) || instructionSet[i].doesOpcodeMatch(o2) || instructionSet[i].doesOpcodeMatch(o3) ||
+                                instructionSet[i].doesOpcodeMatch(o4) || instructionSet[i].doesOpcodeMatch(o5)) {
+                            matchedIndex = i;
                         }
                     }
 
-                    if(theInstruction == null){
-                        throw new Exception();
+                    //Something went wrong
+                    if (matchedIndex == -1) {
+                        System.out.println(currentInstruction);
+                        throw new NoSuchMethodException();
                     }
 
-                    String[] currentInstructionArgs = theInstruction.breakInstruction(instructions.get(callerIndex));
-                    String newInstruction = theInstruction.constructString(currentInstructionArgs, true);
-                    ARMInstructions.set(callerIndex, newInstruction);
-                    currentInstruction = newInstruction;
+                    //At this point we know which instruction is being executed so we can call the method
+                    //that breaks down the instruction in the Instruction class
+                    String[] brokenDownInstruction = instructionSet[matchedIndex].breakInstruction(currentInstruction);
 
-                    scan = new Scanner(currentInstruction);
-                    temp = "";
+                    String curInstructionType = instructionSet[matchedIndex].getInstructionType();
+
+                    if (curInstructionType == "B" || curInstructionType == "CB") {
+                        branchingInstructions.add(p);
+                    }
+
+                    ARMInstructions.add(instructionSet[matchedIndex].constructString(brokenDownInstruction, false));
+                }
+
+                //At this point we know all of the instructions, we just need to do the labels properly.
+                //Go through each instruction in the list of instructions that use labels
+                ArrayList<Label> labels = new ArrayList<Label>();
+
+                for (int callerIndex : branchingInstructions) {
+                    String currentInstruction = ARMInstructions.get(callerIndex);
+                    Scanner scan = new Scanner(currentInstruction);
+                    ArrayList<String> temp = new ArrayList<String>();
 
                     while (scan.hasNext()) {
-                        temp = scan.next();
+                        temp.add(scan.next());
                     }
 
-                    offset = Integer.parseInt(temp);
+                    int offset = Integer.parseInt(temp.get(temp.size() - 1));
+                    int labelIndex = callerIndex + offset;
 
-                    //Have offset now, find index of where label should be and check if there's a label there already
-                    labelIndex = callerIndex + offset;
+                    //Check if label index is reasonable, if not take the original binary: subtract 1, and invert
+                    if (labelIndex > instructions.size()) {
+                        Instruction theInstruction = null;
 
+                        for (Instruction m : instructionSet) {
+                            if (m.getInstructionName().equals(temp.get(0))) {
+                                theInstruction = m;
+                                break;
+                            }
+                        }
+
+                        if (theInstruction == null) {
+                            throw new Exception();
+                        }
+
+                        String[] currentInstructionArgs = theInstruction.breakInstruction(instructions.get(callerIndex));
+                        String newInstruction = theInstruction.constructString(currentInstructionArgs, true);
+                        ARMInstructions.set(callerIndex, newInstruction);
+                        currentInstruction = newInstruction;
+
+                        scan = new Scanner(currentInstruction);
+                        String tempStr = "";
+
+                        while (scan.hasNext()) {
+                            tempStr = scan.next();
+                        }
+
+                        offset = Integer.parseInt(tempStr);
+
+                        //Have offset now, find index of where label should be and check if there's a label there already
+                        labelIndex = callerIndex + offset;
+
+                    }
+
+                    String labelName = "label_" + labels.size();
+                    labels.add(new Label(labelName, labelIndex));
+
+                    String addThis = (temp.get(0) + " ");
+
+                    for (int i = 1; i < temp.size() - 1; i++) {
+                        addThis += temp.get(i) + " ";
+                    }
+
+                    addThis += (labelName);
+
+                    ARMInstructions.set(callerIndex, addThis);
                 }
 
-                String labelName = "label_" + labels.size();
-                labels.add(new Label(labelName, labelIndex));
+                //Sort labels so that it's from largest to smallest so that it doesn't disrupt indexing of the labels
+                for (int i = 0; i < labels.size() - 1; i++) {
+                    int greatestLabelIndex = i;
 
-                ARMInstructions.set(callerIndex, n + " " + labelName);
-            }
+                    for (int j = i + 1; j < labels.size(); j++) {
+                        Label l2 = labels.get(j);
 
-        //Sort labels so that it's from largest to smallest so that it doesn't disrupt indexing of the labels
-        for(int i = 0; i < labels.size() - 1; i++){
-            int greatestLabelIndex = i;
+                        if (labels.get(greatestLabelIndex).getIndex() < l2.getIndex()) {
+                            greatestLabelIndex = j;
+                        }
+                    }
 
-            for(int j = i + 1; j < labels.size(); j++){
-                Label l2 = labels.get(j);
-
-                if(labels.get(greatestLabelIndex).getIndex() < l2.getIndex()){
-                    greatestLabelIndex = j;
+                    //Swap
+                    if (greatestLabelIndex != -1) {
+                        Label l1 = labels.get(i);
+                        labels.set(i, labels.get(greatestLabelIndex));
+                        labels.set(greatestLabelIndex, l1);
+                    }
                 }
-            }
 
-            //Swap
-            if(greatestLabelIndex != -1){
-                Label l1 = labels.get(i);
-                labels.set(i, labels.get(greatestLabelIndex));
-                labels.set(greatestLabelIndex, l1);
-            }
-        }
+                //Insert labels
+                for (Label l : labels) {
+                    ARMInstructions.add(l.getIndex(), l.getName() + ":");
+                }
 
-        //Insert labels
-            for(Label l : labels){
-                ARMInstructions.add(l.getIndex(), l.getName() + ":");
+                for (String str : ARMInstructions) {
+                    System.out.println(str);
+                }
+            } catch (NoSuchMethodException nsme) {
+                System.out.println("One or more instructions are invalid...");
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
-
-            for (String str : ARMInstructions) {
-                System.out.println(str);
-            }
-        } catch (NoSuchMethodException nsme) {
-            System.out.println("One or more instructions are invalid...");
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
         }
     }
 }
