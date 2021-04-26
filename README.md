@@ -6,4 +6,4 @@ This was created using Java and standard Java libraries for everything.
 Running the disassembler:
 java -jar legv8dis.jar FILE.legv8asm.machine
 
-Running the programming like the above will diassemble the file and output the assembly in the console. I have also implemented a way to output the assembly as a file which will be saved as output.legv8asm.
+Running the program like the above will diassemble the file and output the assembly in the console. I have also implemented a -F option to output the assembly as a file which will be saved as output.legv8asm.
