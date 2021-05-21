@@ -1,31 +1,87 @@
+/**
+ * @author Vincent Woodward (https://github.com/vincent-woodward)
+ */
+
 package com.company;
 
+/**
+ * Instruction class stores all methods needed regarding instructions.
+ */
 public class Instruction {
 
+    /**
+     * The instruction string (LDUR, STUR, ADDI, etc)
+     */
     private String instructionStr;
+    /**
+     * Instruction opcode as a String
+     */
     private String opcode;
+    /**
+     * Instruction type (R, I, D, B, CB, IW)
+     */
     private String instructionType;
 
+    /**
+     * Instruction class constructor
+     *
+     * @param instructionStr Instruction string (LDUR, STUR, ADDI, etc)
+     * @param opcode Opcode as a String
+     * @param instructionType The type of the instruction (R, I, D, B, CB, IW)
+     *                        @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public Instruction(String instructionStr, String opcode, String instructionType) {
         this.instructionStr = instructionStr;
         this.opcode = opcode;
         this.instructionType = instructionType;
     }
 
+    /**
+     * Returns the instruction type as a String
+     *
+     * @return String instruction type
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public String getInstructionType(){ return instructionType; }
 
+    /**
+     * Checks whether or not the passed in opcode matches with this particular Instruction
+     *
+     * @param op String to compare with this class
+     * @return True if the opcodes match, false otherwise
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public boolean doesOpcodeMatch(String op) {
         return op.compareTo(opcode) == 0;
     }
 
+    /**
+     * Returns the opcode for this Instruction
+     *
+     * @return String opcode
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public String getOpcode(){
         return opcode;
     }
 
+    /**
+     * Gets the instruction name or str (LDUR, STUR, ADDI, etc)
+     *
+     * @return String instruction name
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public String getInstructionName(){
         return instructionStr;
     }
 
+    /**
+     * Breaks the instruction down into workable parts and returns the mas a String[]
+     *
+     * @param i Given instruction
+     * @return String[] with each part of the instruction. Indexed from 0 to 4.
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public String[] breakInstruction(String i) {
         String[] brokenDown = new String[5];
 
@@ -69,12 +125,15 @@ public class Instruction {
         return brokenDown;
     }
 
-    /*Special Registers:
-    XZR: Register X31
-    LR: Register X30
-    FP: Register X29
-    SP: Register X28
-    * */
+    /**
+     * Given a register number, such as X31 it gives the appropriate register String./
+     *
+     * Special register names: XZR (31), LR (30), FP (29), SP (28).
+     *
+     * @param register integer representing which register
+     * @return String that is the correct register String. If 'special' it will give the name, XREGISTER otherwise.
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     private String getRegisterName(int register){
         return switch (register) {
             case 31 -> "XZR";
@@ -85,6 +144,13 @@ public class Instruction {
         };
     }
 
+    /**
+     * Constructs B type instructions from a broken down instruction
+     *
+     * @param args String[] broken down instruction
+     * @return String B type string
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     private String constructRString(String[] args){
         //Opcode, Rm, Shamt, Rn, Rd
         //Rd = Rn + Rm
@@ -113,6 +179,13 @@ public class Instruction {
         return (instructionStr + " " + Rd + ", " + Rn + ", " + Rm);
     }
 
+    /**
+     * Constructs an I type Instruction as a String
+     *
+     * @param args String[] broken down instruction
+     * @return String I type instruction
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     private String constructIString(String[] args){
         int immediate = Integer.parseInt(args[1], 2);
         String Rn = getRegisterName(Integer.parseInt(args[2], 2));
@@ -121,6 +194,13 @@ public class Instruction {
         return (instructionStr + " " + Rd + ", " + Rn + ", #" + immediate);
     }
 
+    /**
+     * Constructs a D type instruction as a String
+     *
+     * @param args String[] broken down instruction
+     * @return String D type instruction
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     private String constructDString(String[] args){
         //Rt = Rn + DT_add
         //Opcode, DT_add, op, Rn, Rt
@@ -131,6 +211,14 @@ public class Instruction {
         return (instructionStr + " " + Rt + ", [" + Rn + ", #" + immediate + "]");
     }
 
+    /**
+     * Constructs a B type instruction as a String
+     *
+     * @param args String[] broken down instruction
+     * @param isUnreasonbale if the displacement is unreasonable
+     * @return String B type instruction
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     private String constructBString(String[] args, boolean isUnreasonbale){
         int address = Integer.parseInt(args[1], 2);
 
@@ -164,6 +252,13 @@ public class Instruction {
         return (instructionStr + " " + address);
     }
 
+    /**
+     * Returns the correct String for a given condition
+     *
+     * @param cond condition
+     * @return String that is the correct B condition
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     private String getBCond(int cond){
         switch(cond){
             case 0:
@@ -199,6 +294,14 @@ public class Instruction {
         }
     }
 
+    /**
+     * Constructs a CB type instruction as a String
+     *
+     * @param args String[] broken down instruction
+     * @param isUnreasonbale if the displacement is unreasonable
+     * @return String CB type instruction
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     private String constructCBString(String[] args, boolean isUnreasonbale){
         //Opcode, address, Rt
         if(instructionStr.equals("B.")){
@@ -225,6 +328,14 @@ public class Instruction {
         return (instructionStr + " " + Rt + ", " + address);
     }
 
+    /**
+     * Helper method that identifies the correct method to use for the construction of a instruction
+     *
+     * @param args String[] broken down instruction
+     * @param isUnreasonable if the displacement is unreasonable
+     * @return String instruction
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public String constructString(String[] args, boolean isUnreasonable) {
         switch (instructionType) {
             case "R":

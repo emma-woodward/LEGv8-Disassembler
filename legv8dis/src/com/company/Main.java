@@ -1,15 +1,33 @@
+/**
+ * @author Vincent Woodward (https://github.com/vincent-woodward)
+ */
+
 package com.company;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
 
+    /**
+     * Entry point for the disassembler
+     *
+     * @param args the input for the program
+     *             The only input for the program is the file of a .machine binary file
+     * @author Vincent Woodward (https://github.com/vincent-woodward)
+     */
     public static void main(String[] args) {
 
+        /**
+         * This is the LEGv8 instruction set as prescribed in the Computer Organization And Design ARM Edition textbook
+         * with a few other instructions used for debugging when writing assembly:
+         *  - PRNT - prints a register
+         *  - PRNL - prints a new line
+         *  - DUMP - dumps all the registers and halts the program
+         *  - HALT - halts the program
+         */
         Instruction[] instructionSet = {
                 new Instruction("ADD", "10001011000", "R"),
                 new Instruction("ADDI", "1001000100", "I"),
@@ -20,7 +38,7 @@ public class Main {
                 new Instruction("ANDIS", "1111001000", "I"),
                 new Instruction("ANDS", "1110101000", "R"),
                 new Instruction("B", "000101", "B"),
-                new Instruction("BR", "11010110000", "R"), //TODO: BR instruction here doesn't 100% look like the one on the sheet
+                new Instruction("BR", "11010110000", "R"),
                 new Instruction("CBNZ", "10110101", "CB"),
                 new Instruction("CBZ", "10110100", "CB"),
                 new Instruction("DUMP", "11111111110", "R"),
@@ -69,9 +87,9 @@ public class Main {
         };
 
         if (args.length == 0) {
+            //When there isn't a file given, this just allows the user to know that in fact the program did run.
             System.out.println("Hello I am a disassembler, please give me a file to disassemble :)");
         } else {
-
             try {
                 FileInputStream fs = new FileInputStream(new File(args[0]));
                 ArrayList<String> instructions = new ArrayList<String>();
