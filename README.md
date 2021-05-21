@@ -1,10 +1,11 @@
 # LEGv8-Disassembler
 As a part of my COM S 321 (Introduction to Computer Architecture and Machine-Level Programming) class at Iowa State University I had to create a disassembler. The disassembler takes a binary LEG V8 file (a subset of ARM V8) and converts it back to its assembly form without the original label names and without any comments made in the original assembly program.
 
-This was created using Java 15.0.1 and the standard Java libraries for everything.
+This was created using Java 15.0.1 and the standard Java libraries.
 
 Running the disassembler:
-java -jar legv8dis.jar FILE.legv8asm.machine
+- Create a .jar
+- Enter this into a terminal: java -jar legv8dis.jar FILE.legv8asm.machine
 
 Running the program like the above will diassemble the file and output the assembly in the terminal. 
 
